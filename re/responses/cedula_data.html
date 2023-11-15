@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<!--
+    Creado por : Fernando Rivera
+    Fecha      : Septiembre del 2013.
+    Objetivo   : Agenda
+--> 
+<html>
+    <head>
+        <title>Citaciones</title>
+        <link rel="stylesheet" type="text/css" media="screen" href="../../scripts/jquery/jquery-ui-1.10.3.custom/css/redmond/jquery-ui-1.10.3.custom.css" />
+        <link rel="stylesheet" type="text/css" media="screen" href="../../scripts/jquery/jquery.jqGrid-4.5.2/css/ui.jqgrid.css" />
+        <link rel="stylesheet" type="text/css" href="../../scripts/jquery/modal/styles/base.css"   />
+        <link rel="stylesheet"  type="text/css" href="../../scripts/jquery/modal/styles/modal-window.css" />
+        <link rel="stylesheet" type="text/css" media="screen" href="../../scripts/css/principal.css" />
+        <script src="../../scripts/jquery/jquery.jqGrid-4.5.2/js/jquery-1.9.0.min.js" type="text/javascript"></script>
+        <script src="../../scripts/jquery/jquery.jqGrid-4.5.2/js/jquery.jqGrid.min.js" type="text/javascript"></script>
+        <script src="../../scripts/jquery/jquery.jqGrid-4.5.2/js/i18n/grid.locale-es.js" type="text/javascript"></script>
+        <script src="../../scripts/jquery/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js" type="text/javascript"></script>
+        <script src="../../scripts/jquery/util.js" type="text/javascript"></script>
+        <script type="text/javascript" language="javascript" src="../../scripts/general/ajax.js"></script> 
+        <!--[if lte IE 6]><link href="styles/modal-window-ie6.css" type="text/css" rel="stylesheet" /><![endif]-->
+        <script type="text/javascript" language="javascript" src="../../scripts/jquery/modal/scripts/modal-window.min.js"></script>
+
+
+        
+
+        <script type="text/javascript">
+            $.jgrid.no_legacy_api = true;
+            $.jgrid.useJSON = true;
+        </script>
+        <style>
+            .ui-jqgrid tr.jqgrow td{
+                height: auto;
+                white-space: normal;
+            }
+        </style>
+
+        <script type="text/javascript">
+            var gb_salir=true;
+            var gs_opcion="P";
+             
+            function consulta_puntos(){
+                $( "#IFrameDivPuntos" ).dialog({
+                    modal: true,
+                    height: 300, width: 1100,
+                    position: 'left'
+                    /*show: {
+        effect: "blind",
+        duration: 500
+        },
+        hide: {
+        effect: "explode",
+        duration: 1000
+        },*/
+                    
+                });
+                
+            }
+            function salir(){
+                changeIframeBlanca();
+                $("#IFrameDiv").dialog("close");
+                if (gb_salir){
+                    history.back();
+                }
+                
+            } 
+            function regresar(){
+                window.open("clp_criterio_consulta.jsp","_top");
+                //history.back();
+                
+                
+            } 
+            function abrirDialogo(psTitulo) {  
+                $( "#IFrameDiv" ).dialog({
+                    dialogClass: "no-close",
+                    modal: true,
+                    height: 400, width: 500
+                    
+                });
+                $("#IFrameDiv").dialog("widget")         
+                .find(".ui-dialog-titlebar-close").hide();               
+                $(".ui-dialog-titlebar").hide(); 
+                //$("#divTituloModal").html(psTitulo);
+                $("#divTituloModal").html("");
+               
+            };
+            function abrirModal() {  
+                $( "#IFrameDiv" ).dialog({
+                    dialogClass: "no-close",
+                    modal: true,
+                    height: 700, width: 800
+                    
+                });
+                $("#IFrameDiv").dialog("widget")         
+                .find(".ui-dialog-titlebar-close").hide();               
+                $(".ui-dialog-titlebar").hide(); 
+                $("#divTituloModal").html("Detalle de Citaci&oacute;n");
+               
+            };
+            function changeIframeSrc(ps_mensaje) { 
+                var url="clp_mensaje.jsp?ps_mensaje="+ps_mensaje;
+                document.getElementById('iframe_mensaje').src=url; 
+                gb_salir=false;
+            } 
+            function changeIframeBlanca() { 
+                var url="clp_pagina_blanca.jsp";
+                document.getElementById('iframe_mensaje').src=url; 
+                gb_salir=false;
+            } 
+            function changeIframeImagen(ps_id_factura) { 
+                var url="clp_detalles_citaciones.jsp?ps_id_factura="+ps_id_factura+"&ps_opcion="+gs_opcion;
+                document.getElementById('iframe_mensaje').src=url; 
+                gb_salir=false;
+            } 
+            function actualiza_estado_cuenta(ps_persona,ps_opcion) { 
+                var url="clp_estado_cuenta.jsp?ps_persona="+ps_persona+"&ps_opcion="+ps_opcion;
+                document.getElementById('iframe_estado_cuenta').src=url; 
+                gb_salir=false;
+            } 
+        </script>
+
+        <script type="text/javascript">
+            $.jgrid.no_legacy_api = true;
+            $.jgrid.useJSON = true;
+            var gs_mensaje;
+            //Defino Variables Globales.
+            var gs_idFactura;
+            var gs_tamImg;
+            var gs_idImpresion;
+            var gs_idPersona;
+            var gs_idTramite;
+            var gs_identidad;
+            var gs_idEtapa;
+            var gs_idProceso; 
+            var gs_estado;
+            var isServerOcupado = new Boolean(false);
+            var gs_fecha_ini;
+            var gs_fecha_fin;
+            //Recuperar el Registro seleccionado del maestro de la Agenda de 
+            //Impresiones
+            function recuperarRegistroSeleccionado(){
+                var id = jQuery("#list10").jqGrid('getGridParam','selrow');
+                if (id)	{
+                    var p_registro = jQuery("#list10").jqGrid('getRowData',id);                    
+                    gs_idFactura=p_registro.id_factura;
+                    gs_tamImg=p_registro.tam_img;                    
+                    
+                    gs_idPersona=p_registro.id_persona;
+                    gs_idTramite=p_registro.id_tramite;
+                    gs_identidad=p_registro.identificacion
+                    gs_idEtapa=p_registro.id_etapa;
+                    gs_idProceso=p_registro.id_proceso;
+                    gs_idImpresion=p_registro.id;
+       
+                } else { 
+                    alert("Por favor seleccione un registro");
+                    return false;
+                }
+            }                       
+             
+
+            function ver_imagen(){
+                recuperarRegistroSeleccionado();
+                if (gs_tamImg == "0")
+                {
+                    document.getElementById("IFrameDiv").className="ventana-flotante";
+                    var el = document.getElementById("divHerramientaModal"); //se define la variable "el" igual a nuestro div
+                    el.style.display ='none';
+                    el = document.getElementById("divSalirModal"); //se define la variable "el" igual a nuestro div
+                    el.style.display ='block';
+                    
+                    changeIframeSrc("No existe imagen asociada");
+                    abrirDialogo("Mensaje");
+                    
+                }
+                else{  
+                    var ls_direccion = "clp_citacion_imagen.jsp?ps_idFactura="+gs_idFactura+"&ps_tipoImg=FOT";        
+                    ventana = window.open(ls_direccion, target="imagen", "height=500,width=800,left=200,top=20,toolbar=NO,resizable=YES, scrollbars=YES, status=NO, location=NO");   
+                }               
+            }
+            function detalleFactura(){
+                recuperarRegistroSeleccionado();
+                var el = document.getElementById("divHerramientaModal"); //se define la variable "el" igual a nuestro div
+                el.style.display ='block';
+                el = document.getElementById("divSalirModal"); //se define la variable "el" igual a nuestro div
+                el.style.display ='none';
+                
+                document.getElementById("IFrameDiv").className="ventana-oculta";                
+                imagen(gs_idFactura,gs_tamImg);  
+            }
+            function imagen (id_Factura, existeImg)
+            {
+                
+                changeIframeImagen(id_Factura);
+                abrirModal();
+   
+            }    
+
+
+                     
+            function abrir_dialog() {  
+                $( "#dialog" ).dialog({
+                    dialogClass: "no-close",
+                    modal: true,
+                    height: 300, width: 400
+                    
+                });
+                $("#dialog").dialog("widget")         
+                .find(".ui-dialog-titlebar-close").hide(); 
+               
+               
+            };
+            function actualizaEstadoServidor(pbEstado) {
+                isServerOcupado=pbEstado;
+                $("#dialog").dialog("close");
+            }
+            function consulta_criterio(){
+                var fecha_ini=document.getElementById ("from");
+                var fecha_fin=document.getElementById ("to");
+                gs_fecha_ini=fecha_ini.value;
+                gs_fecha_fin=fecha_fin.value;   
+                //window.open("clp_impresiones_jgrid.jsp?ps_opcion=S&ps_fecha_ini="+gs_fecha_ini,target="detalle");                            
+                $("#list10").setGridParam(
+                {datatype:'json', url:"clp_json_impresiones.jsp?ps_opcion=P&ps_fecha_ini="+gs_fecha_ini+"&ps_fecha_fin="+gs_fecha_fin,
+                    page:1
+                }
+            ).trigger("reloadGrid");
+            }
+            function facturas(p_opcion){
+       
+                gs_opcion=p_opcion;
+                $("#list10").setGridParam(
+                {datatype:'json', url:"clp_json_citaciones.jsp?ps_opcion="+p_opcion+"&ps_id_contrato=&ps_id_persona=3847294&ps_placa=&ps_identificacion=0916576796&ps_tipo_identificacion=CED",
+                    page:1
+                }
+            ).trigger("reloadGrid");
+                $("#list10_d").setGridParam(
+                {datatype:'json', url:"clp_json_detalles_citaciones.jsp?ps_id_factura=0",
+                    page:1
+                }
+            ).trigger("reloadGrid");
+                //actualiza_estado_cuenta("3847294",p_opcion);
+            }
+         
+            function updateSize(){
+
+                //getting all lines in two tables by they id
+                var lines = $("tr", this),
+                flines = $("tr", "#"+$(this).attr("id")+"_frozen" );
+
+                //setting in all frozen lines height equel to grid
+                flines.each(function(i, item){
+
+                    //i%2 check because of border collapse
+                    $(item).height( $(lines[i]).innerHeight() - (i%2?1:0) );
+                });
+            }
+         
+         
+        </script>
+
+
+
+
+
+    </head>
+
+    <body>
+
+        <div id="IFrameDiv"
+             title="Detalle de Citación" 
+             class="ventana-flotante">
+            <table width="100%"  border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td width="20%">
+                        &nbsp;
+                    </td>
+                    <td width="60%">
+                        <div id="divTituloModal" align="center" class="tituloVentana">
+                            Detalle de Citación
+                        </div>   
+                    </td>
+                    <td width="20%">
+                        <div id="divSalirModal"  align="right"><a href="javascript:salir();">
+                                <img src="../../imagenes/btnsalir1.png" width="35" height="50" BORDER="0" alt="Salir"></a>
+                        </div>
+                        <div id="divHerramientaModal"  align="right">
+                            <!-- <a href="javascript:ver_imagen();">
+                                 <img src="../../imagenes/icoadocumento.png" width="35" height="50" BORDER="0" alt="Salir"></a>-->
+
+                            <a href="javascript:salir();">
+                                <img src="../../imagenes/btnsalir1.png" width="35" height="50" BORDER="0" alt="Salir"></a>
+
+                        </div>
+                    </td>
+
+                </tr>
+
+            </table>
+            <iframe id ="iframe_mensaje" src="clp_mensaje.jsp?ps_mensaje="
+                    frameborder="0"
+                    width="100%" height="90%">
+            <p>Text for obsolete browsers.</p>
+            </iframe>
+
+
+        </div> 
+        <div id="IFrameDivPuntos"   title="Detalle de Puntos" style="display:none;" >
+            <iframe id ="iframe_puntos" src="clp_grid_puntos.jsp?ps_id_persona=3847294" frameborder="10"
+                    width="1050" height="220">
+            <p>Text for obsolete browsers.</p>
+            </iframe>
+
+        </div> 
+
+                           
+            <table class="MarcoTitulo" width="1100" border="0" cellspacing="1" cellpadding="3" >
+                <tr>
+<td colspan="1" class="titulo1">TOPIC VERDUGA GORAN ANDJELKO&nbsp;&nbsp;</td>
+  <td width="100" class="titulo1"><div align="left">Puntos:</div></td>
+<td width="30" class="titulo1" <a style="text-decoration:none; color:black " href="javascript:consulta_puntos();" title="Información adicional de Puntos">29,5</a></td>
+  <td><div align="left"><a href="javascript:consulta_puntos();"><img src="../../imagenes/icoabusqueda.png" width="17" height="30" BORDER="0" alt="Salir"></a>
+</div></td>
+  <td><div align="left"><a href="javascript:regresar();"><img src="../../imagenes/btnsalir1.png" width="17" height="30" BORDER="0" alt="Salir"></a>
+</div></td>
+</tr>
+<tr>
+<td width="300" colspan="4" class="MarcoTitulo">CED&nbsp;-&nbsp;0916576796</td>
+</tr>
+<tr>
+<td colspan ="5"  class="detalle_formulario">LICENCIA TIPO: B&nbsp&nbsp / VALIDEZ: 14-06-2019 - 12-06-2024</td>
+</tr>
+<tr>
+<td colspan ="5" class="detalle_formulario" ><font COLOR="RED">  </td>
+</tr>
+
+            </table>
+           
+        <div id="div_estado_cuenta" align="left" >
+            <iframe id ="iframe_estado_cuenta"
+                    src="clp_estado_cuenta.jsp?ps_persona=3847294&ps_id_contrato=&ps_opcion=P&ps_placa=&ps_identificacion=0916576796&ps_tipo_identificacion=CED" 
+                    frameborder="0"
+                    width="1100" height="100" >
+            <p>Text for obsolete browsers.</p>
+            </iframe>
+
+        </div> 
+        <div style="width:91%;">
+            <table width="1100" border="0" cellspacing="1" cellpadding="0">
+                <tr> 
+
+                    <td ><div align="center"> 
+                            <input type="radio"  name="radiobutton" value="P" class="radio_button" onClick="facturas(this.value);" CHECKED>
+                            <font class=radio_button>
+                            Pendientes (0)</font>
+                        </div>
+                    </td>
+                    <td > <div align="center"> 
+                            <input type="radio" name="radiobutton" value="R" class="radio_button" onClick="facturas(this.value);">
+                            <font class=radio_button>
+                            En Impugnaci&oacute;n (0)</font> </div></td>
+                    <!--  
+                    <td width="18%"><div align="center"> 
+                              <input type="radio"  name="radiobutton" value="I" class="radio_button" onClick="facturas(this.value);" >
+                              <font class=radio_button>
+                                  Impugnadas (0)</font>
+                          </div>
+                      </td>
+                    -->
+                    <td ><div align="center"> 
+                            <input type="radio" name="radiobutton" value="A" class="radio_button" onClick="facturas(this.value);">
+                            <font class=radio_button>
+                            Anuladas (0)</font> </div></td>  
+
+                    <td ><div align="center"> 
+                            <input type="radio" name="radiobutton" value="G" class="radio_button" onClick="facturas(this.value);">
+                            <font class=radio_button>
+                            Pagadas (6)</font> </div></td>
+                    <td ><div align="center"> 
+                            <input type="radio" name="radiobutton" value="C" class="radio_button" onClick="facturas(this.value);">
+                            <font class=radio_button>
+                            En Convenio (0)</font> </div></td>                                
+
+                </tr>
+            </table>                                       
+            <br>
+            <table id="list10"></table>
+            <div id="pager10"></div>      
+        </div> 
+        <br>
+        <script>
+           
+            var mygrid =     jQuery("#list10").jqGrid({
+                url:'clp_json_citaciones.jsp?ps_opcion=P&ps_id_contrato=&ps_id_persona=3847294&ps_placa=&ps_identificacion=0916576796&ps_tipo_identificacion=CED',
+           
+                datatype: "json",
+           
+                colNames:['Acciones','# Infracci&oacute;n','Entidad','# Citaci&oacute;n','Placa', 'Documento', 'Fecha de Emisi&oacute;n','Fecha Notificaci&oacute;n','Límite de Pago',
+                    'Puntos','Pag.','Anu.','Imp.','Sanci&oacute;n', 'Multa','Remisi&oacute;n','Total a Pagar','Art&iacute;culo/Literal','tam_img','Bq','Img.','Det.'],
+                colModel:[
+                    
+                    {name:'act',index:'act', width:0,sortable:false, align:"center"},
+                    {name:'id_factura',index:'id_factura', width:90,sorttype:'string', align:"right",sortable:false,search:false},                    
+                    {name:'ente',index:'ente', width:120,align:"left",sortable:true, sorttype:'string'},
+                    {name:'secuencia_1',index:'secuencia_1', width:90,align:"left",sortable:true},
+                    {name:'secuencia_4',index:'secuencia_4', width:60,align:"center",sortable:true, sorttype:'string'},
+                    {name:'documento',index:'documento', width:100,sorttype:'string', searchoptions:{sopt:['eq','bw','bn','cn','nc','ew','en']}},
+                    {name:'fecha_emision',index:'fecha_emision', width:125,sorttype:'date', formatter:'date',  formatoptions: {srcformat: "ISO8601Long",newformat:'d-m-Y H:i'}, align:"center"},
+                    {name:'fecha_factura',index:'fecha_factura', width:125,sorttype:'date', formatter:'date',  formatoptions: {srcformat: "ISO8601Long",newformat:'d-m-Y H:i'}, align:"center"},
+                    //{name:'fecha_emision',index:'fecha_emision', width:125,sorttype:'date',  align:"center"},
+                    {name:'fecha_vence',index:'fecha_vence', width:125,sorttype:'string', align:"center",sortable:true},		
+                    // {name:'ente',index:'ente', width:150,align:"left",sortable:true, sorttype:'string'},
+                    {name:'puntos',index:'puntos', width:50,align:"center", sorttype: "string"},
+                    {name:'pagada',index:'pagada', width:40,sorttype:'string',align:"center"},                   
+                    {name:'anulada',index:'anulada', width:40,sorttype:'string',align:"center", stype:'text',search:false},
+                    {name:'reclamo',index:'reclamo', width:40,sorttype:'string',align:"center", sortable:false},
+                    //{name:'valor_factura',index:'valor_factura', width:50,align:"right",formatter: "integer", sorttype: "number", sortable:false,formatter:'currency'},
+                    {name:'capital_factura',index:'capital_factura', width:50,align:"right",formatter: "integer", sorttype: "number", sortable:false,formatter:'currency',formatoptions:{thousandsSeparator:" ", decimalSeparator:",", prefix:"$"}},
+                    {name:'multa',index:'multa', width:80,align:"right",formatter: "integer", sorttype: "number",sortable:false,search:false,formatter:'currency',formatoptions:{thousandsSeparator:" ", decimalSeparator:",", prefix:"$ "}}, 
+                    {name: 'descuento', index: 'descuento', width: 85, align: "right", formatter: "integer", sorttype: "number", sortable: false, search: false, formatter: 'currency', formatoptions: {thousandsSeparator: " ", decimalSeparator: ",", prefix: "$ "}},
+                    {name:'total',index:'total', width:90,sorttype:'string',  align:"right",sortable:false,search:false,formatter:'currency',formatoptions:{thousandsSeparator:" ", decimalSeparator:",", prefix:"$ "}}, 
+                    //{name:'observacion',index:'observacion', width:140,sorttype:'string',  align:"left",sortable:false,search:false},
+                    {name:'rubro',index:'rubro', width:200,sorttype:'string',  align:"left",sortable:false,search:false},
+                    {name:'tam_img',index:'tam_img', width:0,sorttype:'string',  align:"center",sortable:false,search:false},                    
+                    {name:'bloqueo',index:'bloqueo', width:25,sortable:false,sorttype:'string', align:"center",cellattr: function () { return ' title="Citación asociada a bloqueo"'; }},
+                    {name:'imagen',index:'imagen', width:35,sorttype:'string',  align:"center",sortable:false,search:false}, 
+                    {name:'detalle',index:'detalle', width:35,sorttype:'string',  align:"center",sortable:false,search:false}
+                       
+                ],
+                rowNum:50,
+                rowList:[50,100,200],
+                rownumbers: true,
+                rownumWidth: 30,                
+                sortable: true,                
+                multiselect: false,
+                width: 1100,
+                gridview: true,
+                pager: '#pager10',                
+                sortname: 'fecha_emision',
+                viewrecords: true,
+                sortorder: "desc",
+                loadonce:false,
+                paging: true,
+                //multiSort: true,
+                //autowidth: true,
+                height: 140,
+               
+                caption: "Citaciones",
+                
+                footerrow: false,
+                /* afterInsertRow: function(rowid, aData){
+                    switch (aData.bloqueo) {
+                            case 'B': 
+                                    jQuery("#list10").jqGrid('setCell',rowid,'id_factura','',{color:'red'});
+                            break;
+                            case 'N':
+                                    jQuery("#list10").jqGrid('setCell',rowid,'id_factura','',{color:'green'});
+                            break;
+                            
+
+                    }
+                } ,*/
+                loadComplete: function () {
+                    var $self = $(this),
+                    sum_valor_factura = $self.jqGrid("getCol", "valor_factura", false, "sum");
+                    sum_saldo_capital = $self.jqGrid("getCol", "saldo_capital", false, "sum");
+                    sum_multa = $self.jqGrid("getCol", "multa", false, "sum");  
+                    sum_total  = $self.jqGrid("getCol", "total", false, "sum");  
+                    $self.jqGrid("footerData", "set", {fecha_vence: "Totales:", 
+                        valor_factura: sum_valor_factura,saldo_capital:sum_saldo_capital,multa:sum_multa,total:sum_total});
+                },
+
+                gridComplete: function(){
+                  
+                    var ids = jQuery("#list10").jqGrid('getDataIDs');
+                    for(var i=0;i < ids.length;i++){
+                        var cl = ids[i];
+                        be = "<input style='height:22px;width:20px;' type='button' value='E' onclick=\"jQuery('#list10').editRow('"+cl+"');\"  />"; 
+                        se = "<input style='height:22px;width:20px;' type='button' value='S' onclick=\"jQuery('#list10').saveRow('"+cl+"');\"  />"; 
+                        ce = "<input style='height:22px;width:20px;' type='button' value='C' onclick=\"jQuery('#list10').restoreRow('"+cl+"');\" />"; 
+                        ro = "<input style='height:22px;width:20px;' type='button' value='C' onclick=\"ok();\" />"; 
+                        ra="<img src=\"AX-Rojo.gif\" width=\"22\" height=\"22\" />"
+                        preview="<a href=\"javascript:vista_previa()\"><img src=\"../../imagenes/icoaquery_find.png\" width=\"20\" height=\"20\" border=\"0\"  /></a>";
+                        det="<a href=\"javascript:detalleFactura()\"><img src=\"../../imagenes/icoadocumento.png\" width=\"20\" height=\"20\" border=\"0\"  /></a>";
+                        img="<a href=\"javascript:ver_imagen()\"><img src=\"../../imagenes/icoadocumento.png\" width=\"20\" height=\"20\" border=\"0\"  /></a>";
+                        
+                        nook="<a href=\"javascript:act_imp('S')\"><img src=\"../../imagenes/btncancelar1.png\" width=\"20\" height=\"20\" border=\"0\"  /></a>";
+                        ok="<a class=\"link_noStyle\" href=\"javascript:act_imp('S')\"><img src=\"../../imagenes/icoaaceptar.png\" width=15 height=20 border=0 alt=\"Terminar\"></a>";                       
+                        espacio="&nbsp";
+                        recha="<a href=\"javascript:rechazar_tramite()\"><img src=\"../../imagenes/btncancelar1.png\" width=\"20\" height=\"20\" border=\"0\"  /></a>"; 
+                        
+                        jQuery("#list10").jqGrid('setRowData',ids[i],{detalle:det,imagen:img});
+                        
+                        
+                    }	
+                }
+            });
+            
+            jQuery("#list10").jqGrid('hideCol',["act","documento","imagen","fecha_vence","tam_img","pagada","anulada","reclamo"]);
+       
+            $("#list10").jqGrid('setGridWidth', 1100);
+               
+            //jQuery("#list10").jqGrid('navGrid','#pager10',{edit:false,add:false,del:false,search:true,refresh:true});
+
+            jQuery("#list10").jqGrid('navGrid','#pager10',
+            {
+                edit:false,add:false,del:false,search:true,refresh:true
+            },
+            {}, // edit options
+            {}, // add options
+            {}, //del options
+            {multipleSearch:false,closeOnEscape : true,
+                closeAfterSearch : true} // search options
+        );
+//            jQuery("#list10").jqGrid('setGroupHeaders', {
+//                useColSpanStyle: true, 
+//                groupHeaders:[
+//                    {startColumnName: 'capital_factura', numberOfColumns: 3, titleText: 'Valores de Emisión'}
+//                ]	
+//            });
+//            jQuery("#list10").jqGrid('setFrozenColumns');    
+            
+            
+            
+            //jQuery("#list10").jqGrid('filterToolbar',{searchOperators : true});  
+
+
+            //jQuery("#list10").jqGrid('navGrid','#pager10',{add:false,edit:false,del:false});
+            jQuery("#list10_d").jqGrid({
+                    
+                height: 60,
+                width: 1100,
+                url:'clp_json_detalles_citaciones.jsp?ps_id_factura=0',
+                datatype: "json",
+                colNames:['Oculto','Tipo', 'Rubro', 'Clase','Localidad'],
+                colModel:[
+                    {name:'oculto',index:'oculto', width:0},
+                    {name:'fecha',index:'fecha_impresion', width:100},
+                    {name:'tipo',index:'tipo_impr', width:350, align:"left"},
+                    {name:'observacion',index:'observacion', width:200, align:"left"},
+                    {name:'observacion',index:'observacion', width:80, align:"left"}
+                ],
+                rowNum:10,
+                rowList:[10,20,30],
+                pager: '#pager10_d',
+                sortname: 'id_detalle_factura',
+                viewrecords: true,
+                sortorder: "desc",
+                multiselect: false,  
+                rownumbers: true,
+                autowidth: true,
+                    
+                caption:"Detalle de Citación"
+            });//.navGrid('#pager10_d',{add:false,edit:false,del:false});
+              
+            jQuery("#list10_d").jqGrid('hideCol',["oculto"]);
+            $("#bsdata").click(function(){
+                jQuery("#list10").jqGrid('searchGrid',
+                {sopt:['cn','bw','eq','ne','lt','gt','ew']}
+            );
+            }); 
+            $("#list10_d").jqGrid('setGridWidth', 1100); 
+            /// Nuevo OJOOOOOOOOOOO
+            jQuery("#list10_d").jqGrid({ 
+                //options
+                'loadComplete': updateSize,
+                'resizeStop': updateSize
+            });
+            //Frozen Columns init
+            jQuery("#list10_d").jqGrid('setFrozenColumns');
+            ////  fin nuevo
+            
+           
+        </script>
+        <div id="IFrameAud" >
+            <iframe id ="iframe_auditoria"
+                    src="clp_auditoria.jsp" 
+                    frameborder="0"
+                    width="1100" height="70" >
+            <p>Text for obsolete browsers.</p>
+            </iframe>
+        </div>
+         
+
+         
+
+    </body>
+</html>
