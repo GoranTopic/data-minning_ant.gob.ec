@@ -12,7 +12,7 @@ slavery({
         // get slave
         let slave = await master.getIdle();
         let result = slave.run({ 
-            proxy: null, //proxies.next(),
+            proxy: proxies.next(),
             cedula: checklist.next(),
         }).then( async ({ cedula, data }) =>  {
             console.log(`${cedula}: `, data);
@@ -22,6 +22,6 @@ slavery({
             checklist.check(cedula);
             // log
             console.log(`cedula ${cedula} checked, ${checklist._values.length}/${checklist._missing_values.length} left`);
-        }).catch( error => { console.log(`${cedula}: `, error); });
+        }).catch( error => { console.log( error ) });
     }
 })

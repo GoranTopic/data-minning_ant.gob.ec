@@ -8,7 +8,7 @@ slavery({
 }).slave( async ({ proxy, cedula }, slave ) => {
     console.log(`scrapping cedula ${cedula} with proxy ${proxy}`);
     // scrap cedula
-    let data = await scap_cedula(cedula, { proxy: null })
+    let data = await scap_cedula(cedula, { proxy })
     // return cedula
     return { cedula, data };
 })

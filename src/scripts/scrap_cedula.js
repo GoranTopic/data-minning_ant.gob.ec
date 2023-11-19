@@ -5,7 +5,6 @@ import assemble_url from '../utils/assemble_url.js';
 import parseCedula from '../parsers/parseCedula.js';
 import parseEstado from '../parsers/parseEstado.js';
 
-'https://consultaweb.ant.gob.ec/PortalWEB/paginas/clientes/clp_grid_citaciones.jsp?ps_tipo_identificacion=CED&ps_identificacion=0106128374&ps_placa='
 // domain
 let domain = 'https://consultaweb.ant.gob.ec';
 // file path
