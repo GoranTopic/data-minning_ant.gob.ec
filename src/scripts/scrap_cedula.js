@@ -42,7 +42,8 @@ const scap_cedula = async (cedula, {poxy: proxy}) => {
         'ps_identificacion': cedula
     })
     let res = await axios_custom.get(url);
-    console.log(res.data)
+
+    // check if cedula is in db
     if (res.data.mensaje === 'No se encontró registro en el Sistema') {
         console.log(`cedula ${cedula} not found in registro en el Sistema`);
         return { data: 'No se encontró registro en el Sistema' };
@@ -55,7 +56,6 @@ const scap_cedula = async (cedula, {poxy: proxy}) => {
     })
     // get cedula data
     let cedulaData = await axios.get(url).then(res => parseCedula(res.data));
-    console.log(cedulaData)
     
     // get estado de cuenta
     res = await axios.get(

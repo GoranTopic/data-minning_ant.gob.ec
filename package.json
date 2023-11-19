@@ -9,7 +9,9 @@
   },
   "scripts": {
     "start": "node ./src/main.js",
-    "test": "mocha"
+    "test": "mocha",
+    "master": "node ./src/master.js",
+    "slave": "node ./src/slave.js"
   },
   "author": "goran topic",
   "license": "ISC",
