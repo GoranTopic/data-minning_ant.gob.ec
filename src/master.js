@@ -11,7 +11,7 @@ slavery({
     while (checklist.isNotDone()) {
         // get slave
         let slave = await master.getIdle();
-        let result = slave.run({ 
+        slave.run({ 
             proxy: proxies.next(),
             cedula: checklist.next(),
         }).then( async ({ cedula, data }) =>  {

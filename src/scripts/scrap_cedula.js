@@ -1,10 +1,11 @@
-import axios from 'axios';
+import axios_raw from 'axios';
 import fs from 'fs';
 import clean from '../utils/clean.js';
 import assemble_url from '../utils/assemble_url.js';
 import parseCedula from '../parsers/parseCedula.js';
 import parseEstado from '../parsers/parseEstado.js';
 
+'https://consultaweb.ant.gob.ec/PortalWEB/paginas/clientes/clp_grid_citaciones.jsp?ps_tipo_identificacion=CED&ps_identificacion=0106128374&ps_placa='
 // domain
 let domain = 'https://consultaweb.ant.gob.ec';
 // file path
@@ -23,28 +24,26 @@ let consulta_pesona = '/PortalWEB/paginas/clientes/clp_json_consulta_persona.jsp
  * @param {object} options.proxy - The proxy configuration to use for the request.
  * @returns {Promise<object>} - A promise that resolves to the scraped cedula data.
  */
-const scap_cedula = async (cedula, {poxy: proxy}) => {
-
+const scap_cedula = async (cedula, { proxy } = {}) => {
     // if proxy is passed use it
     proxy = proxy || null;
-    let axios_custom = (proxy) ? axios.create({
+    let axios = proxy ? axios_raw.create({
         proxy: {
-            host: proxy.host,
-            port: proxy.port,
+            host: proxy.split(':')[0],
+            port: proxy.split(':')[1],
             protocol: 'http'
         }
-    }) : axios;
+    }) : axios_raw;
 
     // check if cedula is in db
     let url = assemble_url(domain + consulta_pesona, {
         'ps_tipo_identificacion': 'CED',
         'ps_identificacion': cedula
     })
-    let res = await axios_custom.get(url);
+    let res = await axios.get(url);
 
     // check if cedula is in db
     if (res.data.mensaje === 'No se encontró registro en el Sistema') {
-        console.log(`cedula ${cedula} not found in registro en el Sistema`);
         return { data: 'No se encontró registro en el Sistema' };
     }
 
